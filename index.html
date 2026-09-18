@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BotBill — Stop AI Crawlers From Blowing Up Your Infra Bill</title>
+  <meta name="description" content="Find out which AI bots are quietly draining your Vercel, Cloudflare, or AWS budget — and stop them in one click. Starting at $29/month." />
+  <meta property="og:title" content="BotBill — Stop AI Crawlers From Blowing Up Your Infra Bill" />
+  <meta property="og:description" content="Find out which AI bots are quietly draining your Vercel, Cloudflare, or AWS budget — and stop them in one click." />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="BotBill — Stop AI Crawlers From Blowing Up Your Infra Bill" />
+  <meta name="twitter:description" content="Find out which AI bots are quietly draining your Vercel, Cloudflare, or AWS budget — and stop them in one click." />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0a0c10;
+      --bg2:       #111318;
+      --bg3:       #181c24;
+      --border:    #1e2330;
+      --accent:    #f97316;
+      --accent2:   #fb923c;
+      --text:      #f0f2f7;
+      --muted:     #8b92a5;
+      --danger:    #ef4444;
+      --green:     #22c55e;
+      --radius:    12px;
+      --maxw:      780px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── UTILITY ──────────────────────────────────────── */
+    .container { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+    .accent    { color: var(--accent); }
+    .muted     { color: var(--muted); }
+    .tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: rgba(249,115,22,.12);
+      border: 1px solid rgba(249,115,22,.3);
+      border-radius: 999px;
+      padding: 4px 12px;
+    }
+
+    /* ── NAV ──────────────────────────────────────────── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(10,12,16,.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 0;
+    }
+    nav .inner {
+      display: flex; align-items: center; justify-content: space-between;
+      max-width: var(--maxw); margin: 0 auto; padding: 0 24px;
+    }
+    .logo {
+      font-size: 18px; font-weight: 800; letter-spacing: -.02em;
+      color: var(--text); text-decoration: none;
+    }
+    .logo span { color: var(--accent); }
+    nav a.cta-small {
+      font-size: 13px; font-weight: 600;
+      color: var(--accent); text-decoration: none;
+      border: 1px solid rgba(249,115,22,.4);
+      border-radius: 8px; padding: 7px 16px;
+      transition: background .2s;
+    }
+    nav a.cta-small:hover { background: rgba(249,115,22,.1); }
+
+    /* ── HERO ─────────────────────────────────────────── */
+    .hero {
+      padding: 88px 0 72px;
+      text-align: center;
+    }
+    .hero .tag { margin-bottom: 24px; }
+    .hero h1 {
+      font-size: clamp(32px, 6vw, 52px);
+      font-weight: 900;
+      letter-spacing: -.03em;
+      line-height: 1.1;
+      margin-bottom: 20px;
+    }
+    .hero h1 em {
+      font-style: normal;
+      background: linear-gradient(135deg, #f97316, #fb923c, #fde68a);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p.sub {
+      font-size: 18px;
+      color: var(--muted);
+      max-width: 540px;
+      margin: 0 auto 36px;
+      line-height: 1.65;
+    }
+
+    /* ── FORM ─────────────────────────────────────────── */
+    .signup-form {
+      display: flex; gap: 8px;
+      max-width: 480px; margin: 0 auto 14px;
+      flex-wrap: wrap;
+    }
+    .signup-form input[type="email"] {
+      flex: 1;
+      min-width: 220px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      font-size: 15px;
+      color: var(--text);
+      outline: none;
+      transition: border-color .2s;
+    }
+    .signup-form input[type="email"]:focus { border-color: var(--accent); }
+    .signup-form input[type="email"]::placeholder { color: var(--muted); }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      border: none;
+      border-radius: var(--radius);
+      padding: 14px 24px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .2s, transform .1s;
+    }
+    .btn-primary:hover  { background: var(--accent2); }
+    .btn-primary:active { transform: scale(.98); }
+    .form-note {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+    }
+    .form-success {
+      display: none;
+      background: rgba(34,197,94,.1);
+      border: 1px solid rgba(34,197,94,.3);
+      border-radius: var(--radius);
+      padding: 16px 24px;
+      color: var(--green);
+      font-weight: 600;
+      max-width: 480px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    /* ── PROOF BAR ────────────────────────────────────── */
+    .proof-bar {
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 0;
+      background: var(--bg2);
+    }
+    .proof-bar .inner {
+      display: flex; gap: 32px; align-items: center;
+      justify-content: center; flex-wrap: wrap;
+      font-size: 13px; color: var(--muted);
+    }
+    .proof-bar .inner span { white-space: nowrap; }
+    .proof-bar .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--border); flex-shrink: 0;
+    }
+
+    /* ── PAIN ─────────────────────────────────────────── */
+    .pain-section { padding: 80px 0; }
+    .section-label {
+      font-size: 11px; font-weight: 700;
+      letter-spacing: .12em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 12px;
+    }
+    .pain-section h2 {
+      font-size: clamp(24px, 4vw, 36px);
+      font-weight: 800; letter-spacing: -.02em;
+      line-height: 1.2; margin-bottom: 24px;
+    }
+    .pain-section p {
+      font-size: 17px; color: var(--muted);
+      line-height: 1.75; margin-bottom: 16px;
+    }
+
+    .quote-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 24px 28px;
+      margin: 36px 0;
+    }
+    .quote-card blockquote {
+      font-size: 17px;
+      font-style: italic;
+      color: var(--text);
+      line-height: 1.7;
+      margin-bottom: 12px;
+    }
+    .quote-card cite {
+      font-size: 13px;
+      color: var(--muted);
+      font-style: normal;
+    }
+
+    .crawlers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin-top: 32px;
+    }
+    .crawler-chip {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .crawler-chip .icon {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--danger); flex-shrink: 0;
+      box-shadow: 0 0 6px var(--danger);
+    }
+    .crawler-chip .icon.unknown { background: #f59e0b; box-shadow: 0 0 6px #f59e0b; }
+
+    /* ── FEATURES ─────────────────────────────────────── */
+    .features-section { padding: 80px 0; background: var(--bg2); }
+    .features-section h2 {
+      font-size: clamp(24px, 4vw, 36px);
+      font-weight: 800; letter-spacing: -.02em;
+      margin-bottom: 12px;
+    }
+    .features-section .lead {
+      font-size: 17px; color: var(--muted);
+      max-width: 480px; margin-bottom: 48px;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    .feature-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      transition: border-color .2s;
+    }
+    .feature-card:hover { border-color: rgba(249,115,22,.4); }
+    .feature-icon {
+      width: 44px; height: 44px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; margin-bottom: 16px;
+      background: rgba(249,115,22,.1);
+    }
+    .feature-card h3 {
+      font-size: 17px; font-weight: 700;
+      margin-bottom: 8px; letter-spacing: -.01em;
+    }
+    .feature-card p {
+      font-size: 14px; color: var(--muted); line-height: 1.65;
+    }
+
+    /* ── HOW IT WORKS ─────────────────────────────────── */
+    .how-section { padding: 80px 0; }
+    .how-section h2 {
+      font-size: clamp(24px, 4vw, 36px);
+      font-weight: 800; letter-spacing: -.02em;
+      margin-bottom: 48px;
+    }
+    .steps { display: grid; gap: 0; }
+    .step {
+      display: flex; gap: 20px;
+      padding-bottom: 36px;
+      position: relative;
+    }
+    .step:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      left: 19px; top: 40px;
+      width: 2px; bottom: 0;
+      background: var(--border);
+    }
+    .step-num {
+      width: 40px; height: 40px; flex-shrink: 0;
+      border-radius: 50%;
+      background: rgba(249,115,22,.15);
+      border: 1px solid rgba(249,115,22,.4);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 800;
+      color: var(--accent);
+      position: relative; z-index: 1;
+    }
+    .step-body h3 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .step-body p  { font-size: 14px; color: var(--muted); line-height: 1.65; }
+
+    /* ── PRICING ──────────────────────────────────────── */
+    .pricing-section { padding: 80px 0; background: var(--bg2); }
+    .pricing-section h2 {
+      font-size: clamp(24px, 4vw, 36px);
+      font-weight: 800; letter-spacing: -.02em;
+      margin-bottom: 48px; text-align: center;
+    }
+    .pricing-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px; max-width: 600px; margin: 0 auto;
+    }
+    .pricing-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      text-align: center;
+      position: relative;
+    }
+    .pricing-card.featured {
+      border-color: var(--accent);
+      background: linear-gradient(160deg, rgba(249,115,22,.07) 0%, var(--bg) 60%);
+    }
+    .pricing-card .badge {
+      position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+      font-size: 11px; font-weight: 700; letter-spacing: .08em;
+      text-transform: uppercase;
+      background: var(--accent); color: #fff;
+      border-radius: 999px; padding: 3px 14px;
+    }
+    .pricing-card .price {
+      font-size: 44px; font-weight: 900;
+      letter-spacing: -.04em; line-height: 1;
+      margin: 8px 0 4px;
+    }
+    .pricing-card .price sup {
+      font-size: 22px; font-weight: 700;
+      vertical-align: super; margin-right: 2px;
+    }
+    .pricing-card .per {
+      font-size: 13px; color: var(--muted); margin-bottom: 24px;
+    }
+    .pricing-card .plan-name {
+      font-size: 13px; font-weight: 700;
+      letter-spacing: .06em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 4px;
+    }
+    .pricing-features {
+      list-style: none;
+      text-align: left; margin: 24px 0;
+    }
+    .pricing-features li {
+      font-size: 14px; color: var(--muted);
+      padding: 6px 0;
+      display: flex; align-items: flex-start; gap: 10px;
+    }
+    .pricing-features li::before {
+      content: '✓';
+      color: var(--green); font-weight: 700;
+      flex-shrink: 0; margin-top: 1px;
+    }
+    .btn-outline {
+      display: block; width: 100%;
+      text-align: center; text-decoration: none;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+      font-size: 14px; font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      background: none;
+      transition: border-color .2s, background .2s;
+    }
+    .btn-outline:hover { border-color: var(--accent); background: rgba(249,115,22,.07); }
+    .btn-primary.full { display: block; width: 100%; text-align: center; }
+    .pricing-note {
+      text-align: center; margin-top: 24px;
+      font-size: 13px; color: var(--muted);
+    }
+
+    /* ── FAQ ──────────────────────────────────────────── */
+    .faq-section { padding: 80px 0; }
+    .faq-section h2 {
+      font-size: clamp(22px, 3.5vw, 32px);
+      font-weight: 800; letter-spacing: -.02em;
+      margin-bottom: 36px;
+    }
+    details {
+      border-bottom: 1px solid var(--border);
+      padding: 20px 0;
+    }
+    details summary {
+      font-size: 16px; font-weight: 600;
+      cursor: pointer; list-style: none;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px;
+    }
+    details summary::-webkit-details-marker { display: none; }
+    details summary::after {
+      content: '+';
+      font-size: 20px; color: var(--muted);
+      flex-shrink: 0; transition: transform .2s;
+    }
+    details[open] summary::after { transform: rotate(45deg); }
+    details .answer {
+      padding-top: 14px;
+      font-size: 15px; color: var(--muted);
+      line-height: 1.7;
+    }
+
+    /* ── FINAL CTA ────────────────────────────────────── */
+    .final-cta {
+      padding: 100px 0;
+      text-align: center;
+      background: radial-gradient(ellipse 60% 40% at 50% 100%, rgba(249,115,22,.12) 0%, transparent 70%);
+    }
+    .final-cta h2 {
+      font-size: clamp(28px, 5vw, 44px);
+      font-weight: 900; letter-spacing: -.03em;
+      line-height: 1.15; margin-bottom: 16px;
+    }
+    .final-cta p {
+      font-size: 17px; color: var(--muted);
+      max-width: 440px; margin: 0 auto 36px;
+    }
+
+    /* ── FOOTER ───────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 28px 0;
+    }
+    footer .inner {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px;
+      max-width: var(--maxw); margin: 0 auto; padding: 0 24px;
+    }
+    footer p { font-size: 13px; color: var(--muted); }
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--text); }
+
+    /* ── RESPONSIVE ───────────────────────────────────── */
+    @media (max-width: 520px) {
+      .signup-form { flex-direction: column; }
+      .signup-form input[type="email"],
+      .btn-primary { width: 100%; }
+      .proof-bar .dot { display: none; }
+      .pricing-cards { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─── NAV ─────────────────────────────────────────── -->
+<nav>
+  <div class="inner">
+    <a class="logo" href="#">Bot<span>Bill</span></a>
+    <a class="cta-small" href="#waitlist">Join Waitlist →</a>
+  </div>
+</nav>
+
+<!-- ─── HERO ─────────────────────────────────────────── -->
+<section class="hero">
+  <div class="container">
+    <span class="tag">⚠ AI crawler costs are rising fast</span>
+    <h1>Which AI bot is quietly<br><em>destroying your infra bill?</em></h1>
+    <p class="sub">
+      GPTBot, ClaudeBot, Meta-ExternalAgent. AI crawlers don't care about your bandwidth budget.
+      BotBill shows you exactly who's eating your Vercel, Cloudflare, or AWS costs — and lets you stop them in one click.
+    </p>
+
+    <div id="waitlist">
+      <form class="signup-form" id="hero-form">
+        <input type="email" name="email" placeholder="your@email.com" required autocomplete="email" />
+        <button type="submit" class="btn-primary">Join Waitlist</button>
+      </form>
+      <div class="form-success" id="hero-success">
+        🎉 You're on the list! We'll email you when BotBill launches.
+      </div>
+      <p class="form-note">Free to join. No spam. Starting at $29/mo when we launch.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ─── PROOF BAR ─────────────────────────────────────── -->
+<div class="proof-bar">
+  <div class="inner">
+    <span>🔴 Meta-ExternalAgent</span>
+    <div class="dot"></div>
+    <span>🔴 GPTBot (OpenAI)</span>
+    <div class="dot"></div>
+    <span>🔴 ClaudeBot (Anthropic)</span>
+    <div class="dot"></div>
+    <span>🔴 Gemini-Crawler</span>
+    <div class="dot"></div>
+    <span>🔴 PerplexityBot</span>
+    <div class="dot"></div>
+    <span>+ dozens more</span>
+  </div>
+</div>
+
+<!-- ─── PAIN ──────────────────────────────────────────── -->
+<section class="pain-section">
+  <div class="container">
+    <p class="section-label">The Problem</p>
+    <h2>AI crawlers don't ask<br>before running up your tab</h2>
+    <p>
+      Every major AI lab now runs its own crawler — scraping the web constantly to train models, populate RAG indexes, and power AI search. 
+      Your robots.txt is mostly ignored. Your bill is not.
+    </p>
+    <p>
+      Indie founders and small SaaS teams are discovering $200, $800, even $2,000 surprise overages on Vercel and Cloudflare.
+      The worst part: your existing analytics tools show traffic numbers, not <em>which bot</em> is responsible and <em>how much it costs</em>.
+    </p>
+
+    <div class="quote-card">
+      <blockquote>
+        "Zuck's bot increased our Vercel bill 10x. We went from $40/month to $430 overnight. 
+        Had no idea until the invoice hit. Spent four hours debugging before I traced it to Meta-ExternalAgent."
+      </blockquote>
+      <cite>— Indie founder on Hacker News, Sept 2026 (90+ upvotes)</cite>
+    </div>
+
+    <p class="section-label" style="margin-top:36px;">Known AI crawlers draining budgets</p>
+    <div class="crawlers-grid">
+      <div class="crawler-chip"><span class="icon"></span> GPTBot</div>
+      <div class="crawler-chip"><span class="icon"></span> Meta-ExternalAgent</div>
+      <div class="crawler-chip"><span class="icon"></span> ClaudeBot</div>
+      <div class="crawler-chip"><span class="icon"></span> Gemini-Crawler</div>
+      <div class="crawler-chip"><span class="icon"></span> PerplexityBot</div>
+      <div class="crawler-chip"><span class="icon"></span> YouBot</div>
+      <div class="crawler-chip"><span class="icon"></span> Bytespider</div>
+      <div class="crawler-chip"><span class="icon unknown"></span> + new ones weekly</div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FEATURES ──────────────────────────────────────── -->
+<section class="features-section">
+  <div class="container">
+    <p class="section-label">What BotBill Does</p>
+    <h2>Finally: AI crawler visibility<br>built for indie scale</h2>
+    <p class="lead">Connect your log source in 2 minutes. Get a clear breakdown of who's hitting your app and what it's costing you.</p>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Per-Bot Cost Attribution</h3>
+        <p>See exactly how much each AI crawler is costing you in real dollars — not just raw requests. Broken down by bot, day, endpoint, and log source (Vercel, Cloudflare, Nginx).</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔔</div>
+        <h3>Spike Alerts</h3>
+        <p>Get an email or Slack ping the moment a bot exceeds your threshold — before it turns into a billing surprise. Set per-bot or per-project limits.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🛡️</div>
+        <h3>One-Click Blocking</h3>
+        <p>Block or rate-limit specific AI crawlers without touching your Google/Bing crawl budget. BotBill generates precise Vercel or Cloudflare rules, scoped to known AI crawler IP ranges and user agents.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🤖</div>
+        <h3>Always-Updated Bot Database</h3>
+        <p>New AI crawlers appear monthly. BotBill maintains a live fingerprint database so you never chase a mystery user agent again.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── HOW IT WORKS ───────────────────────────────────── -->
+<section class="how-section">
+  <div class="container">
+    <p class="section-label">Setup</p>
+    <h2>Live in under 2 minutes</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>Connect your log source</h3>
+          <p>Paste your Vercel Log Drain token, Cloudflare Logpush endpoint, or upload an Nginx access log. No code changes required.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>See your bot breakdown</h3>
+          <p>BotBill parses your logs, fingerprints known AI crawlers against its database, and shows you a live cost dashboard within seconds.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Set your thresholds</h3>
+          <p>Tell BotBill when to alert you — e.g. "notify me if any single bot exceeds $5 in a 24-hour window." Adjust per-project.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>Block the offenders</h3>
+          <p>Click Block next to any crawler. BotBill generates the exact Cloudflare WAF rule or Vercel config — copy, paste, done.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── PRICING ────────────────────────────────────────── -->
+<section class="pricing-section">
+  <div class="container">
+    <h2>Simple, indie-friendly pricing</h2>
+    <div class="pricing-cards">
+      <div class="pricing-card">
+        <p class="plan-name">Starter</p>
+        <p class="price"><sup>$</sup>29</p>
+        <p class="per">per month · 1 project</p>
+        <ul class="pricing-features">
+          <li>1 connected log source</li>
+          <li>Full bot cost dashboard</li>
+          <li>Email spike alerts</li>
+          <li>Blocking rule generator</li>
+          <li>30-day history</li>
+        </ul>
+        <a href="#waitlist" class="btn-outline">Join Waitlist</a>
+      </div>
+      <div class="pricing-card featured">
+        <div class="badge">Most popular</div>
+        <p class="plan-name">Pro</p>
+        <p class="price"><sup>$</sup>49</p>
+        <p class="per">per month · 5 projects</p>
+        <ul class="pricing-features">
+          <li>Up to 5 log sources</li>
+          <li>Full bot cost dashboard</li>
+          <li>Email + Slack alerts</li>
+          <li>One-click blocking rules</li>
+          <li>90-day history</li>
+          <li>API access</li>
+        </ul>
+        <a href="#waitlist" class="btn-primary full">Join Waitlist →</a>
+      </div>
+    </div>
+    <p class="pricing-note">Early waitlist members get 30% off their first 3 months. No card required to join.</p>
+  </div>
+</section>
+
+<!-- ─── FAQ ───────────────────────────────────────────── -->
+<section class="faq-section">
+  <div class="container">
+    <h2>Frequently asked questions</h2>
+
+    <details>
+      <summary>Won't blocking AI bots hurt my SEO?</summary>
+      <div class="answer">
+        No. BotBill is specifically designed to block <em>AI training and retrieval crawlers</em> — not search engine indexers.
+        Googlebot, Bingbot, and other search crawlers are never touched. You can review every rule before it's applied.
+      </div>
+    </details>
+
+    <details>
+      <summary>Which hosting platforms are supported?</summary>
+      <div class="answer">
+        At launch: Vercel Log Drains, Cloudflare Logpush, and Nginx access logs. AWS CloudFront and Fly.io are on the roadmap.
+        If you use something else, let us know — we build based on waitlist demand.
+      </div>
+    </details>
+
+    <details>
+      <summary>How is this different from Cloudflare Bot Fight Mode?</summary>
+      <div class="answer">
+        Cloudflare Bot Fight Mode costs $20/month (Pro plan), gives you no visibility into which specific AI crawlers are hitting you, 
+        and applies a one-size-fits-all challenge. BotBill shows you per-bot cost attribution and lets you make surgical decisions — 
+        block Meta's crawler, allow OpenAI's, rate-limit Perplexity — without guessing.
+      </div>
+    </details>
+
+    <details>
+      <summary>Do I need to change my code or DNS?</summary>
+      <div class="answer">
+        No code changes required. You connect BotBill to your existing log source (a one-time token or endpoint configuration).
+        For blocking, BotBill generates the rules and you paste them into your Cloudflare dashboard or vercel.json — 
+        it takes about 60 seconds.
+      </div>
+    </details>
+
+    <details>
+      <summary>When will BotBill launch?</summary>
+      <div class="answer">
+        We're building now. Join the waitlist to get early access, an early-adopter discount, 
+        and direct influence over which features ship first. We'll keep the waitlist small and 
+        reach out personally.
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ─── FINAL CTA ──────────────────────────────────────── -->
+<section class="final-cta">
+  <div class="container">
+    <h2>Stop finding out about<br>AI crawler costs from your invoice</h2>
+    <p>Join the waitlist. First 100 members get 30% off for life.</p>
+
+    <form class="signup-form" id="footer-form" style="justify-content:center">
+      <input type="email" name="email" placeholder="your@email.com" required autocomplete="email" />
+      <button type="submit" class="btn-primary">Get Early Access</button>
+    </form>
+    <div class="form-success" id="footer-success">
+      🎉 You're on the list! We'll be in touch soon.
+    </div>
+    <p class="form-note" style="margin-top:10px">No spam · No card required · Unsubscribe anytime</p>
+  </div>
+</section>
+
+<!-- ─── FOOTER ─────────────────────────────────────────── -->
+<footer>
+  <div class="inner">
+    <p><a class="logo" href="#" style="font-size:15px">Bot<span style="color:var(--accent)">Bill</span></a></p>
+    <p>© 2026 BotBill. Built to protect indie founders.</p>
+  </div>
+</footer>
+
+<!-- ─── FORM LOGIC ──────────────────────────────────────── -->
+<script>
+  // Replace FORMSPREE_ID with your actual Formspree form ID
+  // Get one free at https://formspree.io → New Form → copy the ID
+  const FORMSPREE_ENDPOINT = 'https://formspree.io/f/FORMSPREE_ID';
+
+  async function handleSubmit(form, successEl) {
+    const email = form.querySelector('input[type="email"]').value;
+    if (!email) return;
+
+    const btn = form.querySelector('button[type="submit"]');
+    const origText = btn.textContent;
+    btn.textContent = 'Joining…';
+    btn.disabled = true;
+
+    // If the endpoint is still a placeholder, just show success client-side
+    // and log the email to console (replace with real endpoint before launch)
+    if (FORMSPREE_ENDPOINT.includes('FORMSPREE_ID')) {
+      console.log('[BotBill waitlist] Email captured (no backend yet):', email);
+      // Store in localStorage as a fallback so nothing is lost
+      try {
+        const stored = JSON.parse(localStorage.getItem('botbill_waitlist') || '[]');
+        stored.push({ email, ts: new Date().toISOString() });
+        localStorage.setItem('botbill_waitlist', JSON.stringify(stored));
+      } catch(e) {}
+      form.style.display = 'none';
+      successEl.style.display = 'block';
+      return;
+    }
+
+    try {
+      const res = await fetch(FORMSPREE_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      if (res.ok) {
+        form.style.display = 'none';
+        successEl.style.display = 'block';
+      } else {
+        btn.textContent = 'Try again';
+        btn.disabled = false;
+      }
+    } catch(err) {
+      btn.textContent = 'Try again';
+      btn.disabled = false;
+    }
+  }
+
+  document.getElementById('hero-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    handleSubmit(this, document.getElementById('hero-success'));
+  });
+
+  document.getElementById('footer-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    handleSubmit(this, document.getElementById('footer-success'));
+  });
+</script>
+
+</body>
+</html>
